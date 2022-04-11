@@ -1,0 +1,24 @@
+Group,sample,sampletype,site,Sampletype ,location,region,year,June2011Names,latitude,longitude,Cu_mg_kg,Zn_mg_kg,Cd_mg_kg,Pb_mg_kg
+4SED,129,sediment,4,sediment,Varsovia,south,2011,1,14.797657,-87.982507,89.43,194.71,2.53,141.64
+5SED,130,sediment,5,sediment,Varsovia,south,2011,2A,14.799047,-87.982942,64.37,139.8,1.74,90.64
+6SED,131,sediment,6,sediment,Varsovia,south,2011,2B,14.798858,-87.982779,47.11,110.19,1.22,55.56
+7SED,132,sediment,7,sediment,pelagic,south,2011,3,14.800264,-87.988226,248.12,468.96,5.28,468.34
+8SED,133,sediment,8,sediment,Varsovia,south,2011,3B,14.798978,-87.98801,214.91,416.15,5.06,348.81
+9SED,134,sediment,9,sediment,pelagic,south,2011,4,14.808313,-87.988773,14.63,49.43,0.52,16.96
+10SED,135,sediment,10,sediment,pelagic,south,2011,4B,14.804973,-87.98876,11.89,40.14,0.43,13.95
+11SED,136,sediment,11,sediment,casetas,south,2011,5,14.805226,-87.975906,9.86,40.01,0.34,15.14
+12SED,137,sediment,12,sediment,casetas,south,2011,5B,14.805139,-87.975831,3.86,6.78,0.15,2.22
+13SED,138,sediment,13,sediment,Yure,north,2011,6,14.885808,-87.948387,83.02,240.84,2.56,202.13
+14SED,139,sediment,14,sediment,Yure,north,2011,6B,14.88554,-87.948274,82.43,236.62,2.49,213.99
+15SED,140,sediment,15,sediment,Yure,north,2011,7,14.886278,-87.952143,164.85,592.01,6.41,653.5
+16SED,141,sediment,16,sediment,Yure,north,2011,7B,14.886041,-87.951923,206.18,538.69,5.5,442.04
+17SED,142,sediment,17,sediment,pelagic,north,2011,8,14.887913,-87.958652,485.18,1682.47,17.03,2236.26
+18SED,143,sediment,18,sediment,pelagic,north,2011,8B,14.887412,-87.958089,318.14,748.58,7.67,539.8
+19ASED,144,sediment,19A,sediment,AF,north,2011,9,14.889094,-87.964598,289.28,844.63,8.7,785.76
+19BSED,145,sediment,19B,sediment,AF,north,2011,9,14.889094,-87.964598,289.28,844.63,8.7,785.76
+20SED,146,sediment,20,sediment,pelagic,north,2011,9A,14.888495,-87.964198,287.28,758.42,7.93,583.55
+21SED,147,sediment,21,sediment,pelagic,north,2011,9C,14.888069,-87.964005,261.53,730.13,7.14,424.15
+22SED,148,sediment,22,sediment,AF,north,2011,10,14.889907,-87.96777,435.1,1530.74,15.41,1879.44
+23SED,149,sediment,23,sediment,AF,north,2011,11,14.889289,-87.975475,236.47,1658.38,11.51,589.7
+24SED,150,sediment,24,sediment,Raices,west,2011,12,14.887146,-88.026092,62.55,1245.42,11.47,506.46
+25SED,151,sediment,25,sediment,Raices,west,2011,12B,14.887159,-88.026107,43.58,736.98,7.24,348.59
