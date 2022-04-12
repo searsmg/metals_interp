@@ -7,13 +7,13 @@ output: html_document
 
 ```{r}
 library(tidyverse)
-library(sf)
+library(sf) #use
 library(mapview)
 library(lubridate)
 library(osmdata)
-library(raster)
-library(sp)
-library(gstat)
+library(raster) #don't use anymore
+library(sp) #don't use anymore
+library(gstat) #geospatial stats package
 
 ```
 
@@ -32,7 +32,7 @@ ys.m <- st_transform(ys,crs=26716) %>%
 
 
 
-# Get county 
+# Get metadata (bb = bounding box)
 bb <- getbb('Santa Barbara, Honduras')
 
 #Download Lago de Yojoa
@@ -41,13 +41,14 @@ add_osm_feature(key = 'natural', value = 'water') %>%
   osmdata_sf() %>%
   .$osm_polygons %>%
   filter(name == 'Lago de Yojoa') %>%
-  st_transform(26716)
+  st_transform(26716) #finishes with a polygon of lake
 
 
 #Get bboxx info for yojoa
 yo_box <- st_bbox(lake)
 
-mapview(ys,zcol='Cu_mg_kg')
+mapview(ys,zcol='Cu_mg_kg') +
+  mapview(lake)
 ```
 
 ## Make a heatmap
@@ -67,19 +68,58 @@ metals = c('Cu_mg_kg','Zn_mg_kg','Cd_mg_kg','Pb_mg_kg')
 for(i in 1:length(metals)){
   
   
-  formula = as.formula(paste(metals[i], 1,sep='~'))
+  formula = as.formula(paste(metals[i], 1,sep='~')) #when doing this for precip, make it for function of elev, not 1
   cu_s <- gstat(id=metals[i],formula=formula,data=y.sp)
   z <- interpolate(lake.raster,cu_s) %>% round(.,1)
   
-  z <- mask(z,lake.sp)
+  z <- mask(z,lake.sp) #mask out anything that is not open water
   
   
   
   
   cu <- mapview(z,na.col=NA,col.regions=mapviewGetOption('vector.palette')) + 
     mapview(ys.m,zcol=metals[i])
-  mapshot(cu,url=paste0(metals[i],'.html'))
+  mapshot(cu,url=paste0(metals[i],'.html')) #saves the interactive maps as htmls
 }
 
+```
+above is the old way and below is new way
+
+go to keen-swartz-3146c4.netlify.app link for spatial analyses
+
+```{r New way}
+library(stars)
+
+#instead of having raster we will have stars dataset (stack in time which is good for RS)
+#terra looks a lot more like raster package
+
+lake_stars <- st_bbox(lake) %>%
+  st_as_stars(dx = 100) %>%
+  st_crop(lake)
+
+mapview(lake_stars) #can also use plot(lake_stars)
+
+interp = idw(Zn_mg_kg ~ 1, y.sp, lake_stars) #can replace idw with kriging
+
+mapview (interp) + mapview(y.sp, zcol='Zn_mg_kg')
+
+#note to self - look at variograms at the above website
+
+```
+
+#variogram
+
+```{r}
+#make a variogram then can do the kriging
+v_zn <- variogram(Zn_mg_kg ~ 1, y.sp)
+
+plot(v_zn)
+
+#fit variogram with actual function
+v.m <- fit.variogram(v_zn, vgm(1, "Mat", 50, 1)) #50 m is the total range
+
+plot(v_zn, v.m, plot.numbers = T) #cant krige bc cant fit function to this data
+
+# DONT USE SP OR RASTER ANYMORE
 ```
 
