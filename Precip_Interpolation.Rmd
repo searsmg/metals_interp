@@ -1,0 +1,30 @@
+---
+title: "Precipitation Interpolation"
+author: "Matthew Ross"
+date: "4/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(sf) # new goodness
+library(mapview)
+library(lubridate)
+library(osmdata)
+library(gstat)
+library(elevatr)
+
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Load in Precip data
+
+```{r}
+
+
+
+```
+

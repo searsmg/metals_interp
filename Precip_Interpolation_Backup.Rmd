@@ -1,0 +1,109 @@
+---
+title: "Precipitation Interpolation"
+author: "Matthew Ross"
+date: "4/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+library(tidyverse)
+library(sf) # new goodness
+library(mapview)
+library(lubridate)
+library(osmdata)
+library(gstat)
+library(elevatr)
+library(riem)
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+# Read in Daily P data for all CO ASOS sites
+
+See previous assignments or videos for description of ASOS data
+
+```{r}
+
+load('data/DailyP.RData')
+
+head(daily_p)
+```
+
+
+## Get site elevation
+
+```{r, eval = F}
+unique_asos <- daily_p %>%
+  distinct(station, lon, lat) %>%
+  st_as_sf(., coords = c('lon','lat'),crs = 4326) %>%
+  get_elev_point(.)
+
+
+st_write(unique_asos,'data/unique_asos_elev.gpkg')
+```
+
+
+## Take station month averages
+
+
+```{r}
+
+unique_asos <- st_read('data/unique_asos_elev.gpkg')
+
+annual_p <- daily_p %>%
+  mutate(month = month(date)) %>%
+  group_by(month,station,lon,lat) %>%
+  summarize(across(where(is.numeric), sum)) %>%
+  left_join(unique_asos)
+
+
+
+```
+
+
+
+## Look at  (Precip ~ elevation) for All months
+
+
+
+
+```{r}
+
+ggplot(annual_p,aes(x=elevation, y=daily_p,color = month)) + 
+  geom_point() + 
+  ylab('Monthly Precipitation (in)') + 
+  scale_color_viridis_c()
+
+
+
+```
+
+
+
+## Pick a month (summer months are safer)
+
+### Build IDW precip for state for that month
+
+
+
+### Build IDW with elevation for state for that month including elevation as a 
+variable
+
+```{r}
+## You will need to create a Stars raster that has elevation data. 
+
+
+
+```
+
+
+### Compare both maps to PRISM approach for your month
+
+
+How close do our simple approaches come to reproducing prism maps? 
+
+
+https://www.prism.oregonstate.edu/recent/monthly.php
