@@ -22,4 +22,121 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Load in Precip data
 
+```{r}
+load('data/DailyP.RData')
+
+head(daily_p)
+```
+
+
+## Get Elevation Data
+
+```{r, eval = F}
+unique_asos <- daily_p %>%
+  distinct(lon, lat, station)  %>%
+  st_as_sf(., coords = c('lon','lat'), crs = 4326) %>%
+  get_elev_point(.)
+
+st_write(unique_asos, 'data/unique_asso_elev.gpkg')
+```
+
+## Get Monthly P Averages
+
+
+```{r}
+monthly_p <- daily_p %>%
+  mutate(month = month(date)) %>%
+  group_by(month, station) %>%
+  summarize(monthly_p = sum(daily_p)) %>%
+  left_join(unique_asos) #grab elevation data
+  
+
+```
+
+
+## Look at monthly P
+
+```{r}
+ggplot(monthly_p, aes(x = elevation, y = monthly_p, color = month)) + 
+  scale_color_viridis_c() + 
+  geom_point()
+```
+
+
+## Getting Monthly Means of means, mins, maxes. 
+
+```{r}
+monthly_t <- daily_p %>%
+  mutate(month = month(date)) %>%
+  group_by(month, station) %>%
+  select(-lon,-lat) %>%
+  summarize(across(where(is.numeric), mean)) %>%
+  left_join(unique_asos)
+
+
+```
+
+
+## Temp vs Elevation
+
+
+```{r}
+ggplot(monthly_t, aes(y = mean_temp, x = elevation, color = month)) + 
+  geom_point() + 
+  scale_color_viridis_c()
+```
+
+
+
+## Pick a month (summer months are safer)
+
+
+```{r}
+
+```
+
+### Build IDW precip or elevation for state for that month
+
+```{r}
+
+```
+
+### Plot this data
+
+```{r}
+
+```
+
+### Build IDW with elevation for state for that month including elevation as a predictor
+
+Hint! Use `get_elev_raster` 
+
+```{r}
+
+```
+
+### Make a Map of that
+
+```{r}
+## You will need to create a Stars raster that has elevation data. 
+
+
+
+```
+
+
+### Compare both maps to PRISM approach for your month
+
+
+How close do our simple approaches come to reproducing prism maps? 
+
+
+https://www.prism.oregonstate.edu/recent/monthly.php
+
+
+
+
+```{r}
+
+```
 
