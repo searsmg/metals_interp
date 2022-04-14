@@ -13,11 +13,144 @@ library(lubridate)
 library(osmdata)
 library(gstat)
 library(elevatr)
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
 # Load in Precip data
+
+```{r}
+
+load("data/DailyP.Rdata")
+
+
+```
+
+# Get elevation data
+
+```{r}
+#pulling the unqiue metadata info
+unique_asos <- daily_p %>%
+  distinct(lon, lat, station) %>%
+  select(lon, lat, station) %>% #reordering to match get_elev_point
+  st_as_sf(., coords = c('lon','lat'), crs = 4326) %>% 
+  get_elev_point(.)
+
+st_write(unique_asos, 'data/unique_asos_elev.gpkg')
+
+
+```
+
+# Get monthly P Averages
+
+```{r}
+
+monthly_p <- daily_p %>%
+  mutate(month = month(date)) %>%
+  group_by(month, station) %>%
+  summarize(monthly_p = sum(daily_p)) %>%
+  left_join(unique_asos) #grab elevation data
+  
+
+```
+
+#look at monthly P
+
+```{r}
+ggplot(monthly_p, aes(x = elevation, y = monthly_p, color = month)) +
+  geom_point() +
+  scale_color_viridis_c()
+
+```
+#get monthly mean temp of means, mins and maxes
+
+```{r}
+monthly_t <- daily_p %>%
+  mutate(month = month(date)) %>%
+  group_by(month, station) %>%
+  select(-c(lon,lat)) %>% 
+  summarize(across(where(is.numeric), mean)) %>%
+  left_join(unique_asos, .)
+
+
+
+```
+# temp vs. elev
+
+```{r}
+ggplot(monthly_t, aes(x = elevation, y = mean_temp, color = month)) +
+  geom_point() +
+  scale_color_viridis_c()
+```
+
+## Pick a month (summer months are safer)
+
+
+```{r}
+#going to pick a summer month for temp
+unique_asos <- unique_asos %>%
+  st_transform(2163)
+
+aug_t <- monthly_t %>%
+  filter(month == 8) %>%
+  na.omit() %>% 
+  st_transform(2163)
+  
+```
+
+### Build IDW precip or elevation for state for that month
+
+```{r}
+library(stars)
+
+#bb <- get_elev_raster(unique_asos, z=7)
+
+bb <- st_bbox(unique_asos) %>%
+  st_as_stars(dx = 10000)
+
+mapview(bb)
+
+interp = idw(elevation ~ 1, aug_t, bb)
+
+#mapview (interp) + mapview(aug_t, zcol='elevation')
+
+```
+
+### Plot this data
+
+```{r}
+mapview (interp) + mapview(aug_t, zcol='elevation')
+
+```
+
+### Build IDW with elevation for state for that month including elevation as a predictor
+
+Hint! Use `get_elev_raster` 
+
+```{r}
+
+
+
+```
+
+### Make a Map of that
+
+```{r}
+## You will need to create a Stars raster that has elevation data. 
+```
+
+
+### Compare both maps to PRISM approach for your month
+
+
+How close do our simple approaches come to reproducing prism maps? 
+
+
+https://www.prism.oregonstate.edu/recent/monthly.php
+
+
+
 
 ```{r}
 ```
