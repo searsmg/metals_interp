@@ -24,7 +24,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 load("data/DailyP.Rdata")
 
-
 ```
 
 # Get elevation data
@@ -37,7 +36,7 @@ unique_asos <- daily_p %>%
   st_as_sf(., coords = c('lon','lat'), crs = 4326) %>% 
   get_elev_point(.)
 
-st_write(unique_asos, 'data/unique_asos_elev.gpkg')
+#st_write(unique_asos, 'data/unique_asos_elev.gpkg')
 
 
 ```
@@ -73,8 +72,6 @@ monthly_t <- daily_p %>%
   summarize(across(where(is.numeric), mean)) %>%
   left_join(unique_asos, .)
 
-
-
 ```
 # temp vs. elev
 
@@ -103,17 +100,24 @@ aug_t <- monthly_t %>%
 
 ```{r}
 library(stars)
+library(tmap)
 
 #bb <- get_elev_raster(unique_asos, z=7)
 
 bb <- st_bbox(unique_asos) %>%
-  st_as_stars(dx = 10000)
+  st_as_stars(dx = 1000)
 
-mapview(bb)
+mapview(bb) #do plot(bb) bc it is projecting differently on mapview
 
-interp = idw(elevation ~ 1, aug_t, bb)
+interp = idw(daily_p ~ 1, aug_t, bb)
 
-#mapview (interp) + mapview(aug_t, zcol='elevation')
+mapview(interp)
+
+plot(interp)
+
+tm_shape(interp[1]) +
+  tm_raster(palette = 'Blues',
+            style='cont')
 
 ```
 
@@ -130,6 +134,16 @@ Hint! Use `get_elev_raster`
 
 ```{r}
 
+elev <- get_elev_raster(aug_t, z=10)
+
+elev_stars <- st_as_stars(elev, dx=1000) #%>%
+  #st_transform(2163)
+
+mapview(elev_stars)
+
+names(elev_stars) <- 'elevation'
+
+interp2 = idw(daily_p ~ elevation, aug_t, elev_stars)
 
 
 ```
@@ -138,8 +152,15 @@ Hint! Use `get_elev_raster`
 
 ```{r}
 ## You will need to create a Stars raster that has elevation data. 
-```
 
+mapview(interp2)
+
+tm_shape(interp2) +
+  tm_raster(palette = "Blues",
+            style = 'cont')
+
+
+```
 
 ### Compare both maps to PRISM approach for your month
 
