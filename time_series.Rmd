@@ -1,0 +1,137 @@
+---
+title: "time_series_demo"
+author: "Megan Sears"
+date: "4/20/2022"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+library(dataRetrieval)
+library(tsibble) #time series tables
+library(imputeTS) #imputing over missing data gaps
+library(xts) #make dygraphs
+library(dygraphs)
+
+```
+```{r}
+chl_a <- readNWISuv('06888990',
+                    parameterCd = '32318',
+                    startDate = '2022-01-01',
+                    endDate = '2022-03-01') %>%
+  renameNWISColumns(p32318 = 'chl_a') %>%
+  select(-ends_with('_cd'))
+
+summary(chl_a)
+
+```
+```{r}
+ggplot(chl_a, aes(x=dateTime, y=chl_a_Inst)) +
+  geom_line()
+
+```
+Finding and filling gaps
+
+```{r}
+str(chl_a)
+
+chl_ts <- as_tsibble(chl_a,
+                     index = dateTime)
+
+chl_ts
+
+has_gaps(chl_ts)
+
+count_gaps(chl_ts)
+
+```
+#Make full TS
+
+```{r}
+chl_full <- fill_gaps(chl_ts)
+
+ggplot(chl_full, aes(x=dateTime, y=chl_a_Inst)) +
+  geom_line()
+
+
+```
+
+#Cleaning time series
+
+```{r}
+chl_gap_fill <- chl_full %>%
+  mutate(chl_linear = na_interpolation(chl_a_Inst, 
+                                       maxgap = Inf)) %>%
+  pivot_longer(chl_a_Inst:chl_linear)
+
+
+count_gaps(chl_gap_fill)
+
+ggplot(chl_gap_fill, aes(x=dateTime, y=value, 
+                         color = name, size=name)) +
+  geom_line() +
+  scale_size_manual(values = c(2,1))
+
+```
+
+## Smoothing
+
+```{r}
+chl_xts <- chl_gap_fill %>%
+  dplyr::filter(name == 'chl_linear') %>% 
+  dplyr::select(dateTime, value) %>%
+  as_tibble(.) %>%
+  mutate(type='raw')
+
+library(plotly)
+library(lubridate)
+
+g1 <- ggplot(chl_xts, aes(dateTime, value)) +
+  geom_line()
+
+g1
+
+ggplotly(g1)
+
+#group by hour
+chl_hr <- chl_xts %>%
+  mutate(dateHour = round_date(dateTime, 'hour')) %>%
+  group_by(dateHour) %>% 
+  summarize(chl_hour = median(value)) %>%
+  mutate(type='hourly_median')
+
+chl_both <- bind_rows(chl_hr, chl_xts) %>%
+  bind_rows(chl_runmed)
+
+g1 <- ggplot(chl_both, aes(x=dateTime, value, color = type)) +
+  geom_line()
+
+ggplotly(g1, dynamicTicks = T)
+
+# filter -- take the runnning median
+chl_runmed <- chl_xts %>% 
+  mutate(value = runmed(value, 9)) %>% 
+  mutate (type = 'runmed')
+
+## can filter for only low pass and not high pass for large streamflow peaks
+
+```
+
+# do same analysis as above but with water temp
+
+```{r}
+temp <- readNWISuv('06888990',
+                    parameterCd = '32318',
+                    startDate = '2022-01-01',
+                    endDate = '2022-03-01') #%>%
+  renameNWISColumns(p32318 = 'chl_a') %>%
+  select(-ends_with('_cd'))
+
+summary(chl_a)
+
+
+
+```
+
