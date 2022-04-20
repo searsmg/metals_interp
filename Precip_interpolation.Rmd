@@ -134,7 +134,7 @@ Hint! Use `get_elev_raster`
 
 ```{r}
 
-elev <- get_elev_raster(aug_t, z=10)
+elev <- get_elev_raster(aug_t, z=6)
 
 elev_stars <- st_as_stars(elev, dx=1000) #%>%
   #st_transform(2163)
@@ -155,7 +155,7 @@ interp2 = idw(daily_p ~ elevation, aug_t, elev_stars)
 
 mapview(interp2)
 
-tm_shape(interp2) +
+tm_shape(interp2[1]) +
   tm_raster(palette = "Blues",
             style = 'cont')
 
@@ -170,8 +170,58 @@ How close do our simple approaches come to reproducing prism maps?
 
 https://www.prism.oregonstate.edu/recent/monthly.php
 
+```{r}
+```
+
+## ANSWER KEY BELOW
 
 
+### Build IDW precip or elevation for Colorado for that month
+
+```{r}
+unique_asos_2163 <- st_transform(unique_asos,crs = 2163)
+co_box <- st_bbox(unique_asos_2163) %>%
+  st_as_stars(dx = 1000)
+july_t <- monthly_t %>%
+  dplyr::filter(month == 6) %>%
+  st_transform(., st_crs(co_box)) %>%
+  na.omit(.)
+interp_basic = idw(mean_temp~1, july_t, co_box) %>%
+  dplyr::select(1)
+tm_shape(interp_basic) + 
+  tm_raster(palette = 'Reds', style = 'cont')
+```
+
+### Plot this data
 
 ```{r}
 ```
+
+### Build IDW with elevation for state for that month including elevation as a predictor
+
+Hint! Use `get_elev_raster` 
+
+```{r}
+library(raster)
+ras <- get_elev_raster(unique_asos, z = 7) %>%
+  raster::crop(.,unique_asos)
+co_stars <- st_as_stars(ras)
+names(co_stars) <- 'elevation'
+june_t <- monthly_t %>%
+  filter(month == 6)
+ggplot(june_t, aes(elevation, mean_temp)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+interp = gstat::idw(mean_temp~elevation, 
+                    june_t, 
+                    co_stars) %>%
+  dplyr::select(1)
+```
+
+### Make a Map of that
+
+```{r}
+## You will need to create a Stars raster that has elevation data. 
+tm_shape(interp) + 
+  tm_raster(palette = 'plasma', style = 'cont')
+mapview(interp)
