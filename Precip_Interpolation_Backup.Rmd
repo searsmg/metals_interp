@@ -3,6 +3,8 @@ title: "Precipitation Interpolation"
 author: "Matthew Ross"
 date: "4/13/2022"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -52,6 +54,8 @@ st_write(unique_asos,'data/unique_asos_elev.gpkg')
 ```{r}
 
 unique_asos <- st_read('data/unique_asos_elev.gpkg')
+
+
 
 annual_p <- daily_p %>%
   mutate(month = month(date)) %>%

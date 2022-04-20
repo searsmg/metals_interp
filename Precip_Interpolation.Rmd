@@ -14,7 +14,8 @@ library(lubridate)
 library(osmdata)
 library(gstat)
 library(elevatr)
-
+library(stars)
+library(tmap)
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -37,13 +38,15 @@ unique_asos <- daily_p %>%
   st_as_sf(., coords = c('lon','lat'), crs = 4326) %>%
   get_elev_point(.)
 
-st_write(unique_asos, 'data/unique_asso_elev.gpkg')
+st_write(unique_asos, 'data/unique_asos_elev.gpkg')
 ```
 
 ## Get Monthly P Averages
 
 
 ```{r}
+unique_asos <- st_read('data/unique_asos_elev.gpkg')
+
 monthly_p <- daily_p %>%
   mutate(month = month(date)) %>%
   group_by(month, station) %>%
@@ -69,9 +72,9 @@ ggplot(monthly_p, aes(x = elevation, y = monthly_p, color = month)) +
 monthly_t <- daily_p %>%
   mutate(month = month(date)) %>%
   group_by(month, station) %>%
-  select(-lon,-lat) %>%
-  summarize(across(where(is.numeric), mean)) %>%
-  left_join(unique_asos)
+  dplyr::select(-lon,-lat) %>%
+  summarize(across(where(is.numeric), mean, na.rm = T)) %>%
+  left_join(unique_asos,.) 
 
 
 ```
@@ -95,9 +98,27 @@ ggplot(monthly_t, aes(y = mean_temp, x = elevation, color = month)) +
 
 ```
 
-### Build IDW precip or elevation for state for that month
+### Build IDW precip or elevation for Colorado for that month
 
 ```{r}
+
+unique_asos_2163 <- st_transform(unique_asos,crs = 2163)
+
+co_box <- st_bbox(unique_asos_2163) %>%
+  st_as_stars(dx = 1000)
+
+
+july_t <- monthly_t %>%
+  dplyr::filter(month == 6) %>%
+  st_transform(., st_crs(co_box)) %>%
+  na.omit(.)
+
+interp_basic = idw(mean_temp~1, july_t, co_box) %>%
+  dplyr::select(1)
+
+
+tm_shape(interp_basic) + 
+  tm_raster(palette = 'Reds', style = 'cont')
 
 ```
 
@@ -112,6 +133,30 @@ ggplot(monthly_t, aes(y = mean_temp, x = elevation, color = month)) +
 Hint! Use `get_elev_raster` 
 
 ```{r}
+library(raster)
+
+ras <- get_elev_raster(unique_asos, z = 7) %>%
+  raster::crop(.,unique_asos)
+
+
+co_stars <- st_as_stars(ras)
+
+
+names(co_stars) <- 'elevation'
+
+june_t <- monthly_t %>%
+  filter(month == 6)
+
+ggplot(june_t, aes(elevation, mean_temp)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm')
+
+interp = gstat::idw(mean_temp~elevation, 
+                    june_t, 
+                    co_stars) %>%
+  dplyr::select(1)
+
+
 
 ```
 
@@ -120,8 +165,11 @@ Hint! Use `get_elev_raster`
 ```{r}
 ## You will need to create a Stars raster that has elevation data. 
 
+tm_shape(interp) + 
+  tm_raster(palette = 'plasma', style = 'cont')
 
 
+mapview(interp)
 ```
 
 
@@ -137,6 +185,5 @@ https://www.prism.oregonstate.edu/recent/monthly.php
 
 
 ```{r}
-
 ```
 
